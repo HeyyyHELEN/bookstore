@@ -1,0 +1,168 @@
+<!DOCTYPE html >
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <base th:href="@{/}">
+    <title>尚硅谷会员登录页面</title>
+    <link type="text/css" rel="stylesheet" href="static/css/style.css"/>
+</head>
+<body>
+<div id="app">
+    <div id="login_header">
+        <a href="index.html">
+            <img class="logo_img" alt="" src="static/img/logo.gif"/>
+        </a>
+    </div>
+    <div class="login_banner">
+        <div id="l_content">
+            <span class="login_word">欢迎登录</span>
+        </div>
+
+        <div id="content">
+            <div class="login_form">
+                <div class="login_box">
+                    <div class="tit">
+                        <h1>尚硅谷会员</h1>
+                    </div>
+                    <div class="msg_cont">
+                        <b></b>
+                        <span class="errorMsg" v-text="errorMsg" >请输入用户名和密码</span>
+                    </div>
+                    <div class="form">
+                        <!--登录表单-->
+                        <!--禁用form原有的同步请求， form校验通过发起异步请求-->
+                        <form action="user" @submit.prevent="checkLogin()" method="post">
+                            <input type="hidden" name="method" value="login">
+                            <label>用户名称：</label>
+                            <input
+                                    class="itxt"
+                                    type="text"
+                                    placeholder="请输入用户名"
+                                    autocomplete="off"
+                                    tabindex="1"
+                                    name="username"
+                                    id="username"
+                                    @change="checkUsername()"
+                                    v-model="username"
+                            />
+                            <br/>
+                            <br/>
+                            <label>用户密码：</label>
+                            <input
+                                    class="itxt"
+                                    type="password"
+                                    placeholder="请输入密码"
+                                    autocomplete="off"
+                                    tabindex="1"
+                                    name="password"
+                                    id="password"
+                                    @change="checkPassword()"
+                                    v-model="password"
+                            />
+                            <br/>
+                            <br/>
+                            <input type="submit" value="登录" id="sub_btn"/>
+                        </form>
+                        <div class="tit">
+                            <a th:href="@{/user(method=toRegistPage)}">立即注册</a>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="bottom">
+      <span>
+        尚硅谷书城.Copyright &copy;2015
+      </span>
+    </div>
+</div>
+
+</body>
+<script src="static/script/vue.js"></script>
+<script src="static/script/axios.js"></script>
+<script>
+
+    var vue = new Vue({
+        el: "#app",
+        data: {
+            username: "",
+            password: "",
+            errorMsg: "[[${errorMsg}]]"
+        },
+        methods: {
+
+
+            /**
+             * 判断指定内容content是否为空，如果为空给出指定错误信息errorMsg
+             * @param content
+             * @param errorMsg
+             * @returns {boolean}
+             */
+            checkNull(content, errorMsg) {
+                var reg = /^\s*$/;
+                if (reg.test(content)) {
+                    //内容为空
+                    this.errorMsg = errorMsg;
+                    return false;
+                } else {
+                    //内容不为空
+                    this.errorMsg = "";
+                    return true;
+                }
+            },
+
+            /**
+             * 校验账户
+             */
+            checkUsername() {
+                return this.checkNull(this.username, "账户不能为空!");
+            },
+            /**
+             * 校验密码
+             */
+            checkPassword() {
+                return this.checkNull(this.password, "密码不能为空!");
+            },
+
+            /**
+             * 校验登录表单
+             */
+            checkLogin() {
+                //如果账户为空 || 密码为空，禁止表单提交
+                //账户为空 flag1=false
+                //密码为空 flag2=false
+                if (!this.checkUsername() || !this.checkPassword()) {
+                    //禁止表单提交
+                    event.preventDefault();
+                    return;
+                }
+                var _this = this;
+                //表单校验通过，发起异步请求
+                axios({
+                    method:"post",
+                    url:"user",
+                    params:{
+                        method: "login",
+                        username: _this.username,
+                        password: _this.password
+                    }
+                }).then(function (res) {
+                    var data = res.data;
+                    console.log(data);
+                    if (data.flag){
+                        //登录成功，保存用户信息，跳转login_success.html
+                        sessionStorage.setItem("existUser",JSON.stringify(data.data));
+                        location.href = "user?method=toLoginSuccessPage"
+                    } else {
+                        //登录失败，给出错误提示（局部刷新）
+                        _this.errorMsg = data.msg;
+                    }
+                })
+            }
+        }
+    })
+
+</script>
+</html>

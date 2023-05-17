@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <base th:href="@{/}">
+    <title>尚硅谷会员注册页面</title>
+    <link type="text/css" rel="stylesheet" href="static/css/style.css"/>
+    <link rel="stylesheet" href="static/css/register.css"/>
+    <style type="text/css">
+        .login_form {
+            height: 420px;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="login_header">
+        <a href="index.html">
+            <img class="logo_img" alt="" src="static/img/logo.gif"/>
+        </a>
+    </div>
+    <div class="login_banner">
+        <div class="register_form">
+            <h1>注册尚硅谷会员</h1>
+            <form action="user" @submit="checkRegist()" method="post">
+                <input type="hidden" name="method" value="regist">
+                <div class="form-item">
+                    <div>
+                        <label>用户名称:</label>
+                        <input type="text" placeholder="请输入用户名" @change="checkUsername()" v-model="username" name="userName"/>
+                    </div>
+                    <span class="errMess" v-text="usernameErrorMsg" th:text="${errorMsg}">用户名应为6~16位数字和字母组成</span>
+                </div>
+                <div class="form-item">
+                    <div>
+                        <label>用户密码:</label>
+                        <input type="password" placeholder="请输入密码" @change="checkPassword()" v-model="password" name="userPwd"/>
+                    </div>
+                    <span class="errMess" v-text="passwordErrorMsg">密码的长度至少为5位</span>
+                </div>
+                <div class="form-item">
+                    <div>
+                        <label>确认密码:</label>
+                        <input type="password" placeholder="请输入确认密码" @change="checkRePassword()" v-model="repassword" />
+                    </div>
+                    <span class="errMess" v-text="repasswordErrorMsg">密码两次输入不一致</span>
+                </div>
+                <div class="form-item">
+                    <div>
+                        <label>用户邮箱:</label>
+                        <input type="text" placeholder="请输入邮箱" @change="checkEmail()" v-model="email" name="email"/>
+                    </div>
+                    <span class="errMess" v-text="emailErrorMsg">请输入正确的邮箱格式</span>
+                </div>
+                <div class="form-item">
+                    <div>
+                        <label>验证码:</label>
+                        <div class="verify">
+                            <input type="text" placeholder="请输入验证码!" @change="checkCode()" v-model="code" name="code"/>
+                            <img id="codeImg" @click="refreshImg()" th:src="@{/kaptcha}"  alt="无法获取验证码!" style="margin-left: 10px; width: 150px; height: 50px"/>
+                        </div>
+                    </div>
+                    <span class="errMess" v-text="codeErrorMsg">请输入正确的验证码</span>
+                </div>
+                <button class="btn">注册</button>
+            </form>
+        </div>
+    </div>
+    <div id="bottom">
+      <span>
+        尚硅谷书城.Copyright &copy;2015
+      </span>
+    </div>
+</div>
+
+</body>
+<script src="static/script/vue.js"></script>
+<script>
+
+    var vue = new Vue({
+        el: "#app",
+        data: {
+            username: "",//账户
+            password: "",//密码
+            repassword: "",//确认密码
+            email: "",//邮箱
+            code: "",//验证码
+            usernameErrorMsg: "[[${errorMsg}]]",//账户的错误提示信息
+            passwordErrorMsg: "",//密码的错误提示信息
+            repasswordErrorMsg: "",//确认密码的错误提示信息
+            emailErrorMsg: "",//邮箱的错误提示信息
+            codeErrorMsg: "[[${codeErrorMsg}]]"
+        },
+        methods: {
+
+
+            refreshImg(){
+                var imgEle = document.getElementById("codeImg");
+                imgEle.setAttribute("src","kaptcha");
+            },
+
+
+            /**
+             * 根据指定正则表达式校验指定的内容
+             * @param reg : 指定正则表达式
+             * @param content : 指定的内容
+             * @returns {boolean}
+             */
+            checkInfo(reg, content) {
+                if (reg.test(content)) {
+                    //格式合法，没有错误提示信息
+                    return true;
+                } else {
+                    //格式不合法，有错误提示信息
+                    return false;
+                }
+            },
+
+            /**
+             * 校验账户 : 用户名应为6~16位数字和字母组成
+             */
+            checkUsername() {
+                var reg = /^[0-9a-zA-Z]{6,16}$/;
+                var flag = this.checkInfo(reg,this.username);
+                this.usernameErrorMsg = flag ? "" : "用户名应为6~16位数字和字母组成!";
+                return flag;
+            },
+            /**
+             * 校验密码 : 密码的长度至少为5位
+             */
+            checkPassword() {
+                var reg = /^.{5,}$/;
+                var flag = this.checkInfo(reg,this.password);
+                this.passwordErrorMsg = flag ? "" : "密码的长度至少为5位!";
+                return flag;
+            },
+            /**
+             * 校验确认密码 : 密码两次输入不一致
+             */
+            checkRePassword() {
+                if (this.password == this.repassword) {
+                    //两次密码一致，没有错误提示信息
+                    this.repasswordErrorMsg = "";
+                    return true;
+                } else {
+                    //两次密码不一致，有错误提示信息
+                    this.repasswordErrorMsg = "密码两次输入不一致!";
+                    return false;
+                }
+            },
+            /**
+             * 校验邮箱 : 请输入正确的邮箱格式
+             */
+            checkEmail() {
+                var reg = /^[a-zA-Z0-9_\.-]+@([a-zA-Z0-9-]+[\.]{1})+[a-zA-Z]+$/;
+                var flag = this.checkInfo(reg,this.email);
+                this.emailErrorMsg = flag ? "" : "请输入正确的邮箱格式!";
+                return flag;
+            },
+            /**
+             * 校验验证码 : 请输入正确的验证码
+             */
+            checkCode() {
+                var reg = /^[0-9a-z]{5}$/;
+                var flag = this.checkInfo(reg,this.code);
+                this.codeErrorMsg = flag ? "" : "请输入正确的验证码!";
+                return flag;
+
+            },
+
+            checkRegist() {
+                //检查用户、密码、确认密码、邮箱、验证码，只要有一个不合法，就禁止表单提交
+                if (!this.checkUsername() || !this.checkPassword() ||
+                    !this.checkRePassword() || !this.checkEmail() ||
+                    !this.checkCode()) {
+                    event.preventDefault();
+                }
+                //表单校验通过，手动提交表单
+
+            }
+
+        }
+    })
+
+
+</script>
+</html>
